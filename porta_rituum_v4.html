@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Porta Rituum</title>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;600&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --stone:#1a1714;--stone2:#221f1b;--stone3:#2c2925;--stone4:#3a3530;
+  --gold:#c9a84c;--gold2:#e8c96a;--gold3:#a07830;
+  --cream:#f0e8d8;--cream2:#d8ccb8;--muted:#8a7d6a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--stone);color:var(--cream);font-family:'Crimson Text',Georgia,serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(201,168,76,.03) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(201,168,76,.02) 0%,transparent 50%);pointer-events:none;z-index:0}
+.container{max-width:820px;margin:0 auto;padding:0 20px 60px;position:relative;z-index:1}
+
+.header{text-align:center;padding:48px 0 32px;border-bottom:1px solid var(--stone4);margin-bottom:32px}
+.header-ornament{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.25em;color:var(--gold3);text-transform:uppercase;margin-bottom:12px}
+.header h1{font-family:'Cinzel',serif;font-size:clamp(28px,5vw,48px);font-weight:600;color:var(--gold);letter-spacing:.08em;line-height:1.1;margin-bottom:8px}
+.header-sub{font-family:'IM Fell English',serif;font-style:italic;font-size:15px;color:var(--muted)}
+
+.tabs{display:flex;gap:2px;margin-bottom:32px;border-bottom:1px solid var(--stone4);flex-wrap:wrap}
+.tab{padding:10px 18px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;color:var(--muted);border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s,border-color .2s}
+.tab:hover{color:var(--cream2)}.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.panel{display:none}.panel.active{display:block}
+
+.inscription-block{background:var(--stone2);border:1px solid var(--stone4);border-radius:4px;padding:28px 32px;margin-bottom:20px;position:relative}
+.inscription-block::before{content:'';position:absolute;top:8px;left:8px;right:8px;bottom:8px;border:1px solid var(--stone4);border-radius:2px;pointer-events:none;opacity:.4}
+.inscription-label{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold3);margin-bottom:16px}
+.latin{font-family:'IM Fell English',serif;font-style:italic;font-size:18px;line-height:2.1;color:var(--cream)}
+.divider-line{border:none;border-top:1px solid var(--stone4);margin:16px 0}
+.translation{font-family:'Crimson Text',serif;font-size:15px;line-height:1.85;color:var(--cream2);display:none}
+.translation.visible{display:block}
+
+.hint-grid{display:flex;flex-direction:column;gap:12px}
+.hint-card{background:var(--stone2);border:1px solid var(--stone4);border-left:3px solid var(--stone4);border-radius:0 4px 4px 0;padding:16px 20px;transition:border-left-color .3s}
+.hint-card.unlocked{border-left-color:var(--gold3)}
+.hint-num{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.2em;color:var(--gold3);margin-bottom:10px}
+.hint-latin{font-family:'IM Fell English',serif;font-style:italic;font-size:15px;line-height:2;color:var(--cream)}
+.hint-de{font-size:14px;line-height:1.7;color:var(--muted);display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--stone4)}
+.hint-de.visible{display:block}
+
+.pw-row{display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.pw-input{background:var(--stone3);border:1px solid var(--stone4);border-radius:2px;padding:6px 10px;font-family:'Crimson Text',serif;font-size:13px;color:var(--cream);outline:none;width:150px;transition:border-color .2s}
+.pw-input:focus{border-color:var(--gold3)}
+.pw-btn{padding:6px 14px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border:1px solid var(--gold3);background:transparent;color:var(--gold);border-radius:2px;transition:background .15s}
+.pw-btn:hover{background:var(--stone3)}
+.pw-error{font-family:'IM Fell English',serif;font-style:italic;font-size:12px;color:#c05050;display:none}
+.pw-error.visible{display:block}
+.unlocked-badge{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;color:var(--gold3);text-transform:uppercase;display:none}
+.unlocked-badge.visible{display:inline-block}
+
+.puzzle-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:24px 0}
+.puzzle-controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.pbtn{padding:10px 28px;border-radius:2px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;border:1px solid var(--stone4);background:var(--stone2);color:var(--cream2);transition:background .15s,border-color .15s}
+.pbtn:hover{background:var(--stone3);border-color:var(--muted)}
+.pbtn.einrasten{border-color:var(--gold3);color:var(--gold)}
+.pbtn.einrasten:hover{background:var(--stone3);border-color:var(--gold)}
+.pbtn.loesen{border-color:#4a8a5a;color:#6aaa7a}
+.pbtn.loesen:hover:not([disabled]){background:var(--stone3);border-color:#6aaa7a}
+.pbtn.reset-pending{border-color:#8a5a2a;color:#c08040}
+.pbtn.reset-pending:hover{background:var(--stone3);border-color:#c08040}
+.pbtn.beenden{border-color:#4a6a8a;color:#6a9aaa;padding:10px 28px;border-radius:2px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;border-width:1px;border-style:solid;background:var(--stone2);transition:background .15s,border-color .15s}
+.pbtn.beenden:hover{background:var(--stone3);border-color:#8abaca}
+
+.puzzle-warning{
+  display:none;font-family:'Cinzel',serif;
+  font-size:clamp(20px,4vw,30px);font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+  color:#dd1515;text-align:center;padding:16px 24px;
+  border:2px solid #9b2020;border-radius:4px;
+  background:rgba(150,20,20,0.14);width:100%;max-width:500px;
+  text-shadow:0 0 24px rgba(220,20,20,0.5);
+}
+.puzzle-warning.visible{display:block}
+
+.puzzle-solved{
+  display:none;font-family:'Cinzel',serif;
+  font-size:clamp(14px,3vw,20px);font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+  color:#6aaa7a;text-align:center;padding:14px 20px;
+  border:2px solid #4a8a5a;border-radius:4px;
+  background:rgba(42,90,58,0.14);width:100%;max-width:500px;
+  text-shadow:0 0 20px rgba(80,180,100,0.4);
+}
+.puzzle-solved.visible{display:block}
+
+.progress{display:flex;gap:6px;justify-content:center}
+.pip{width:11px;height:11px;border-radius:50%;background:var(--stone3);border:1px solid var(--stone4);transition:background .4s,border-color .4s}
+.pip.pending{background:var(--gold3);border-color:var(--gold)}
+.pip.solved{background:#4a8a5a;border-color:#6aaa7a}
+
+canvas{display:block;touch-action:none;cursor:grab;max-width:100%}
+canvas:active{cursor:grabbing}
+
+.gm-locked{text-align:center;padding:40px 20px}
+.gm-locked-title{font-family:'Cinzel',serif;font-size:13px;letter-spacing:.2em;color:var(--gold3);text-transform:uppercase;margin-bottom:20px}
+.gm-content{display:none}.gm-content.visible{display:block}
+.section-title{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold3);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--stone4)}
+.solution-table{width:100%;border-collapse:collapse;font-size:15px;margin-bottom:24px}
+.solution-table th{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold3);padding:10px 16px;text-align:left;border-bottom:1px solid var(--stone4)}
+.solution-table td{padding:10px 16px;border-bottom:1px solid var(--stone3);color:var(--cream2)}
+.solution-table tr:hover td{background:var(--stone2)}
+.sym{font-size:18px}.spacer{height:28px}
+.note{font-size:14px;line-height:1.85;color:var(--cream2)}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <div class="header-ornament">Cthulhu · Mittelalter-Szenario</div>
+  <h1>Porta Rituum</h1>
+  <div class="header-sub">Das versiegelte Tor zur Ritualkammer</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('einleitung',this)">Inschrift</button>
+  <button class="tab" onclick="switchTab('hinweise',this)">Hinweise</button>
+  <button class="tab" onclick="switchTab('raetsel',this)">Rätsel</button>
+  <button class="tab" onclick="switchTab('spielleiter',this)">✦</button>
+</div>
+
+<!-- EINLEITUNG -->
+<div class="panel active" id="panel-einleitung">
+  <div class="inscription-block">
+    <div class="inscription-label">Inscriptio Portae</div>
+    <div class="latin">
+      „Chaos ante ordinem fuit — et post eam erit.<br>
+      Septem dii, septem dies, septem tempora coniuncta.<br><br>
+      Post septimum hiems regnat, unum et sexaginta dies.<br>
+      Nec deus, nec dies, nec tempus illis datur.<br><br>
+      Chaos non extra ordinem est. Est eius centrum."
+    </div>
+    <div class="divider-line"></div>
+    <div class="translation" id="transl-main">
+      „Das Chaos war vor der Ordnung — und wird nach ihr sein.<br>
+      Sieben Götter, sieben Tage, sieben Zeiten vereint.<br><br>
+      Nach dem Siebten herrscht der Winter, einundsechzig Tage.<br>
+      Kein Gott, kein Tag, keine Zeit wird ihnen gegeben.<br><br>
+      Das Chaos liegt nicht außerhalb der Ordnung. Es ist ihr Kern."
+    </div>
+    <div class="pw-row" id="pw-row-main">
+      <input type="password" class="pw-input" id="pw-main" placeholder="Schlüsselwort…"
+        onkeydown="if(event.key==='Enter')unlock('main','nietal','transl-main','pw-row-main','err-main','badge-main')">
+      <button class="pw-btn" onclick="unlock('main','nietal','transl-main','pw-row-main','err-main','badge-main')">Entschlüsseln</button>
+      <span class="unlocked-badge" id="badge-main">✦ Entschlüsselt</span>
+      <span class="pw-error" id="err-main">Ordo perturbatus est!</span>
+    </div>
+  </div>
+</div>
+
+<!-- HINWEISE -->
+<div class="panel" id="panel-hinweise">
+  <div class="hint-grid" id="hint-grid"></div>
+</div>
+
+<!-- RÄTSEL -->
+<div class="panel" id="panel-raetsel">
+  <div class="puzzle-wrap">
+    <canvas id="cv" width="480" height="480"></canvas>
+    <div class="progress" id="prog"></div>
+    <div class="puzzle-warning" id="warn">ORDO PERTURBATUS EST!</div>
+    <div class="puzzle-solved" id="solved">✦ PORTA APERITUR ✦</div>
+    <div class="puzzle-controls">
+      <button class="pbtn einrasten" id="btn-einrasten" onclick="doEinrasten()">Einrasten</button>
+      <button class="pbtn loesen" id="btn-loesen" onclick="doLoesen()" disabled style="opacity:.4;cursor:not-allowed">Lösen</button>
+      <button class="pbtn reset-pending" id="btn-reset-pending" onclick="resetPending()">Einrastungen löschen</button>
+    </div>
+    <button class="pbtn beenden" id="btn-beenden" onclick="doBeenden()" style="display:none;margin-top:8px">Tor schließen &amp; neu beginnen</button>
+  </div>
+</div>
+
+<!-- SPIELLEITER -->
+<div class="panel" id="panel-spielleiter">
+  <div class="gm-locked" id="gm-locked">
+    <div class="gm-locked-title">Zugang beschränkt</div>
+    <div class="pw-row" style="justify-content:center">
+      <input type="password" class="pw-input" id="pw-gm" placeholder="Schlüsselwort…"
+        onkeydown="if(event.key==='Enter')unlockGM()">
+      <button class="pw-btn" onclick="unlockGM()">Zugang</button>
+    </div>
+    <div class="pw-row" style="justify-content:center;margin-top:8px">
+      <span class="pw-error" id="err-gm">Ordo perturbatus est!</span>
+    </div>
+  </div>
+  <div class="gm-content" id="gm-content">
+    <div class="section-title">Lösung — Die sieben Triaden</div>
+    <table class="solution-table">
+      <thead><tr><th>Gott</th><th>Symbol</th><th>Attribut</th><th>Monat</th><th>Ziffer</th></tr></thead>
+      <tbody>
+        <tr><td>Sol</td><td class="sym">☉</td><td>Stern</td><td>Iunius</td><td>IV</td></tr>
+        <tr><td>Luna</td><td class="sym">☽</td><td>Auge</td><td>Sextilis</td><td>VI</td></tr>
+        <tr><td>Mars</td><td class="sym">♂</td><td>Speer</td><td>Martius</td><td>I</td></tr>
+        <tr><td>Mercurius</td><td class="sym">☿</td><td>Flügel</td><td>Maius</td><td>III</td></tr>
+        <tr><td>Iuppiter</td><td class="sym">♃</td><td>Blitz</td><td>Quintilis</td><td>V</td></tr>
+        <tr><td>Venus</td><td class="sym">♀</td><td>Muschel</td><td>Aprilis</td><td>II</td></tr>
+        <tr><td>Saturnus</td><td class="sym">♄</td><td>Sichel</td><td>September</td><td>VII</td></tr>
+      </tbody>
+    </table>
+    <div class="spacer"></div>
+    <div class="section-title">Tor-Mechanik</div>
+    <div class="note">Das Tor öffnet nur von außen durch das Rätsel. Es schließt nur von innen durch einen Riegel. Von außen gibt es keinen Schließmechanismus. Das Öffnen ist unwiderruflich — wer die Kammer betritt muss das Problem lösen.</div>
+    <div class="spacer"></div>
+    <div class="section-title">Passwörter</div>
+    <table class="solution-table">
+      <thead><tr><th>Element</th><th>Passwort</th></tr></thead>
+      <tbody>
+        <tr><td>Einleitung</td><td>nietal</td></tr>
+        <tr><td>Hinweis I — Mars</td><td>sram</td></tr>
+        <tr><td>Hinweis II — Mercurius</td><td>rukrem</td></tr>
+        <tr><td>Hinweis III — Luna</td><td>anul</td></tr>
+        <tr><td>Hinweis IV — Iuppiter</td><td>retipuj</td></tr>
+        <tr><td>Hinweis V — Sol</td><td>ennos</td></tr>
+        <tr><td>Hinweis VI — Saturnus</td><td>nrutas</td></tr>
+        <tr><td>Hinweis VII — Venus</td><td>sunev</td></tr>
+        <tr><td>Spielleiter</td><td>retielleips</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// HINTS
+// ══════════════════════════════════════════
+const HINTS=[
+  {id:'sram',num:'· Inscriptio I ·',latin:'„Qui prima luce anni terram calcavit —<br>idem hasta caelum petit, idem bellum aperuit.<br>Tertius inter septem dies nomen eius portat."',de:'„Der beim ersten Licht des Jahres die Erde betrat — derselbe strebt mit dem Speer zum Himmel, derselbe hat den Krieg eröffnet. Der dritte unter sieben Tagen trägt seinen Namen."'},
+  {id:'rukrem',num:'· Inscriptio II ·',latin:'„Ex matre natus, inter omnes currit —<br>nec ante solem, nec post lunam.<br>Alae eius ex ea natae sunt,<br>mensis eius nomen matris portat."',de:'„Aus der Mutter geboren, läuft er zwischen allen — weder vor der Sonne noch hinter dem Mond. Seine Flügel sind aus ihr geboren, sein Monat trägt den Namen der Mutter."'},
+  {id:'anul',num:'· Inscriptio III ·',latin:'„Oculus qui nunquam dormit videt mensem<br>quo plena et propinqua inter astra regnat —<br>maior, clarior, terrae vicinior quam umquam.<br>Tunc oculus et luna unum sunt."',de:'„Das Auge das niemals schläft sieht den Monat, in dem sie voll und nah unter den Sternen herrscht — größer, heller, der Erde näher als je. Dann sind Auge und Mond eins."'},
+  {id:'retipuj',num:'· Inscriptio IV ·',latin:'„Fulmen cadit ubi pater iubet —<br>et pater maxime gebietet quando caelum et terra contremescunt.<br>Aestatis mediae rex est."',de:'„Der Blitz fällt wo der Vater befiehlt — und der Vater gebietet am lautesten wenn Himmel und Erde erzittern. Er ist der König der Mitte des Sommers."'},
+  {id:'ennos',num:'· Inscriptio V ·',latin:'„Stella radians diem longissimum tenet —<br>quando umbra fugit et lux triumphat.<br>Qui radios portat, mensem lucis portat."',de:'„Der strahlende Stern hält den längsten Tag — wenn der Schatten flieht und das Licht triumphiert. Der die Strahlen trägt, trägt den Monat des Lichts."'},
+  {id:'nrutas',num:'· Inscriptio VI ·',latin:'„Messor falcem portat quia tempus secat —<br>post eum hiems venit, dii silent,<br>menses sine nomine manent.<br>Ultimus vivorum, primus tacitorum."',de:'„Der Schnitter trägt die Sichel weil er die Zeit schneidet — nach ihm kommt der Winter, die Götter schweigen, die Monate bleiben ohne Namen. Der letzte der Lebenden, der erste der Schweigenden."'},
+  {id:'sunev',num:'· Inscriptio VII ·',latin:'„Concha ex mari nata, dea ex spuma nata —<br>ambo se aperiunt sicut terra vere.<br>Ubi aperire incipit, ibi dea habitat."',de:'„Die Muschel aus dem Meer geboren, die Göttin aus dem Schaum geboren — beide öffnen sich wie die Erde im Frühling. Wo das Öffnen beginnt, dort wohnt die Göttin."'}
+];
+const grid=document.getElementById('hint-grid');
+HINTS.forEach((h,i)=>{
+  const card=document.createElement('div');
+  card.className='hint-card';card.id='hcard-'+i;
+  card.innerHTML=`<div class="hint-num">${h.num}</div><div class="hint-latin">${h.latin}</div><div class="hint-de" id="hde-${i}">${h.de}</div><div class="pw-row"><input type="password" class="pw-input" id="hpw-${i}" placeholder="Schlüsselwort…" onkeydown="if(event.key==='Enter')unlockHint(${i},'${h.id}')"><button class="pw-btn" onclick="unlockHint(${i},'${h.id}')">Entschlüsseln</button><span class="unlocked-badge" id="hbadge-${i}">✦ Entschlüsselt</span><span class="pw-error" id="herr-${i}">Ordo perturbatus est!</span></div>`;
+  grid.appendChild(card);
+});
+
+// ══════════════════════════════════════════
+// PASSWORD
+// ══════════════════════════════════════════
+function unlock(id,pw,contentId,rowId,errId,badgeId){
+  const input=document.getElementById('pw-'+id);
+  if(input.value===pw){document.getElementById(contentId).classList.add('visible');document.getElementById(rowId).style.display='none';document.getElementById(badgeId).classList.add('visible');}
+  else{const err=document.getElementById(errId);err.classList.add('visible');input.value='';setTimeout(()=>err.classList.remove('visible'),2500);}
+}
+function unlockHint(i,pw){
+  const input=document.getElementById('hpw-'+i);
+  if(input.value===pw){document.getElementById('hde-'+i).classList.add('visible');input.closest('.pw-row').style.display='none';document.getElementById('hbadge-'+i).classList.add('visible');document.getElementById('hcard-'+i).classList.add('unlocked');}
+  else{const err=document.getElementById('herr-'+i);err.classList.add('visible');input.value='';setTimeout(()=>err.classList.remove('visible'),2500);}
+}
+function unlockGM(){
+  const input=document.getElementById('pw-gm');
+  if(input.value==='retielleips'){document.getElementById('gm-locked').style.display='none';document.getElementById('gm-content').classList.add('visible');}
+  else{const err=document.getElementById('err-gm');err.classList.add('visible');input.value='';setTimeout(()=>err.classList.remove('visible'),2500);}
+}
+
+// ══════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════
+function switchTab(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='raetsel') draw();
+}
+
+// ══════════════════════════════════════════
+// THUNDER — echtes Donnergrollen
+// ══════════════════════════════════════════
+function playThunder(){
+  try{
+    const ac=new(window.AudioContext||window.webkitAudioContext)();
+    const sr=ac.sampleRate;
+    const dur=3.5;
+    const len=sr*dur;
+
+    // Layer 1: tiefes Grollen mit Sinuswellen
+    const rumbleBuf=ac.createBuffer(1,len,sr);
+    const rd=rumbleBuf.getChannelData(0);
+    for(let i=0;i<len;i++){
+      const t=i/sr;
+      const attack=Math.min(1,t/0.04);
+      const decay=Math.exp(-t*0.7);
+      const wave=Math.sin(2*Math.PI*22*t)*0.5+Math.sin(2*Math.PI*38*t)*0.35+Math.sin(2*Math.PI*17*t)*0.25+Math.sin(2*Math.PI*55*t)*0.15;
+      rd[i]=(Math.random()*2-1)*0.4*attack*decay+wave*attack*decay*0.7;
+    }
+
+    // Layer 2: scharfer Donnerschlag
+    const crackBuf=ac.createBuffer(1,len,sr);
+    const cd=crackBuf.getChannelData(0);
+    for(let i=0;i<len;i++){
+      const t=i/sr;
+      const env=t<0.002?1:Math.exp(-(t-0.002)*14);
+      cd[i]=(Math.random()*2-1)*env*2.0;
+    }
+
+    // Layer 3: langer Hall-Schweif
+    const tailBuf=ac.createBuffer(1,len,sr);
+    const taild=tailBuf.getChannelData(0);
+    let prev=0;
+    for(let i=0;i<len;i++){
+      const t=i/sr;
+      const noise=Math.random()*2-1;
+      prev=prev*0.985+noise*0.015;
+      const env=t<0.25?0:Math.min(1,(t-0.25)/0.2)*Math.exp(-(t-0.25)*0.45)*1.2;
+      taild[i]=prev*env;
+    }
+
+    // Layer 4: zweiter Grollen-Nachschlag
+    const echoBuf=ac.createBuffer(1,len,sr);
+    const ed=echoBuf.getChannelData(0);
+    for(let i=0;i<len;i++){
+      const t=i/sr;
+      const delay=0.6;
+      if(t<delay){ed[i]=0;continue;}
+      const tt=t-delay;
+      const env=Math.min(1,tt/0.1)*Math.exp(-tt*1.1);
+      ed[i]=(Math.random()*2-1)*env*0.5+Math.sin(2*Math.PI*25*tt)*env*0.4;
+    }
+
+    const rumbleSrc=ac.createBufferSource();rumbleSrc.buffer=rumbleBuf;
+    const crackSrc=ac.createBufferSource();crackSrc.buffer=crackBuf;
+    const tailSrc=ac.createBufferSource();tailSrc.buffer=tailBuf;
+    const echoSrc=ac.createBufferSource();echoSrc.buffer=echoBuf;
+
+    const lp1=ac.createBiquadFilter();lp1.type='lowpass';lp1.frequency.value=160;lp1.Q.value=1.5;
+    const lp2=ac.createBiquadFilter();lp2.type='lowpass';lp2.frequency.value=900;lp2.Q.value=0.5;
+    const lp3=ac.createBiquadFilter();lp3.type='lowpass';lp3.frequency.value=110;lp3.Q.value=2.5;
+    const lp4=ac.createBiquadFilter();lp4.type='lowpass';lp4.frequency.value=140;lp4.Q.value=1.8;
+
+    // Großer Hall-Convolver
+    const convLen=sr*2.2;
+    const convBuf=ac.createBuffer(2,convLen,sr);
+    for(let ch=0;ch<2;ch++){
+      const cvd=convBuf.getChannelData(ch);
+      for(let i=0;i<convLen;i++) cvd[i]=(Math.random()*2-1)*Math.exp(-i/(sr*0.55));
+    }
+    const conv=ac.createConvolver();conv.buffer=convBuf;
+    const convGain=ac.createGain();convGain.gain.value=0.55;
+
+    const gRumble=ac.createGain();gRumble.gain.setValueAtTime(2.0,ac.currentTime);gRumble.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);
+    const gCrack=ac.createGain();gCrack.gain.setValueAtTime(1.4,ac.currentTime);gCrack.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.5);
+    const gTail=ac.createGain();gTail.gain.setValueAtTime(0.001,ac.currentTime);gTail.gain.linearRampToValueAtTime(1.0,ac.currentTime+0.4);gTail.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);
+    const gEcho=ac.createGain();gEcho.gain.setValueAtTime(0.9,ac.currentTime);gEcho.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);
+
+    rumbleSrc.connect(lp1);lp1.connect(gRumble);gRumble.connect(ac.destination);
+    crackSrc.connect(lp2);lp2.connect(gCrack);gCrack.connect(ac.destination);
+    tailSrc.connect(lp3);lp3.connect(gTail);gTail.connect(ac.destination);
+    echoSrc.connect(lp4);lp4.connect(gEcho);gEcho.connect(ac.destination);
+    // Hall auf alle Schichten
+    gRumble.connect(conv);gCrack.connect(conv);gTail.connect(conv);
+    conv.connect(convGain);convGain.connect(ac.destination);
+
+    rumbleSrc.start();crackSrc.start();tailSrc.start();echoSrc.start();
+    setTimeout(()=>ac.close(),(dur+0.8)*1000);
+  }catch(e){}
+}
+
+// ══════════════════════════════════════════
+// RÄTSEL
+// ══════════════════════════════════════════
+const N=7;
+const STEP=2*Math.PI/N;
+const GODS  =['☉','☽','♂','☿','♃','♀','♄'];
+const GNAMES=['Sol','Luna','Mars','Mercurius','Iuppiter','Venus','Saturnus'];
+const NUMS  =['IV','VI','I','III','V','II','VII'];
+
+// SOLUTION: for godIndex g, correct slot index is g
+// meaning: gOrd[g]===g, dOrd[g]===g, mOrd[g]===g when fully aligned
+
+const SC={
+  bg:'#1a1714',r1:'#2c2925',r2:'#252220',r3:'#1e1c1a',
+  act:'rgba(201,168,76,0.12)',actB:'#c9a84c',
+  pending:'rgba(160,120,48,0.35)',pendingB:'#c9a84c',
+  solved:'rgba(42,90,58,0.42)',solvedB:'#4a8a5a',
+  brd:'#3a3530',txt:'#f0e8d8',mut:'#8a7d6a',
+  acc:'#c9a84c',mkr:'#c9a84c',
+};
+
+// Ring offsets: absolute angle offset for each ring (radians)
+// A slot s in ring r appears at angle: -PI/2 + ringAngle[r] + s*STEP
+// Initial: -0.5*STEP so slot 0 center lands exactly at top
+let ringAngle=[-0.5*STEP,-0.5*STEP,-0.5*STEP];
+let ringDrag=0;        // current drag delta (added during drag only)
+let gOrd=[0,1,2,3,4,5,6]; // which god symbol is in slot s of outer ring
+let dOrd=[0,1,2,3,4,5,6]; // which day symbol is in slot s of middle ring
+let mOrd=[0,1,2,3,4,5,6]; // which month numeral is in slot s of inner ring
+
+// pendingEntries: array of {gSlot, dSlot, mSlot, god, day, mon}
+// Slot indices are fixed — world angles computed fresh each draw from current ringAngle
+let pendingEntries=[];
+let solvedEntries=[];
+
+let isSolved=false;
+let drag=null,dragStartAngle=0,dragStartRingAngle=0;
+
+function rnd(a){for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];}}
+
+function doFullReset(){
+  // Komplett sauberer Reset aller Variablen
+  ringAngle=[-0.5*STEP,-0.5*STEP,-0.5*STEP];
+  ringDrag=0;
+  drag=null;
+  dragStartAngle=0;
+  dragStartRingAngle=0;
+  gOrd=[0,1,2,3,4,5,6];
+  dOrd=[0,1,2,3,4,5,6];
+  mOrd=[0,1,2,3,4,5,6];
+  rnd(gOrd);rnd(dOrd);rnd(mOrd);
+  pendingEntries=[];
+  solvedEntries=[];
+  isSolved=false;
+  // UI zurücksetzen
+  document.getElementById('warn').classList.remove('visible');
+  document.getElementById('solved').classList.remove('visible');
+  document.getElementById('btn-beenden').style.display='none';
+  document.getElementById('btn-einrasten').style.display='';
+  document.getElementById('btn-einrasten').disabled=false;
+  document.getElementById('btn-loesen').style.display='';
+  document.getElementById('btn-reset-pending').style.display='';
+  document.getElementById('btn-reset-pending').disabled=false;
+  updProg();draw();
+}
+
+function doBeenden(){
+  doFullReset();
+}
+
+function fullReset(){doFullReset();}
+
+function updProg(){
+  const p=document.getElementById('prog');p.innerHTML='';
+  const total=pendingEntries.length+solvedEntries.length;
+  for(let i=0;i<N;i++){
+    const d=document.createElement('div');
+    if(i<solvedEntries.length) d.className='pip solved';
+    else if(i<total) d.className='pip pending';
+    else d.className='pip';
+    p.appendChild(d);
+  }
+  // Lösen-Button nur aktiv wenn alle 7 eingerastet (pending+solved=7)
+  const btn=document.getElementById('btn-loesen');
+  if(total>=N&&!isSolved){
+    btn.disabled=false;btn.style.opacity='1';btn.style.cursor='pointer';
+  } else {
+    btn.disabled=true;btn.style.opacity='.4';btn.style.cursor='not-allowed';
+  }
+}
+
+function resetPending(){
+  if(isSolved) return;
+  pendingEntries=[];
+  updProg();draw();
+}
+
+// Slot center world angle for ring r, slot s (including live drag)
+function slotWorldAngle(r,s){
+  return -Math.PI/2 + ringAngle[r] + (r===drag?ringDrag:0) + (s+0.5)*STEP;
+}
+
+// Which slot is closest to top for ring r
+function topSlot(r){
+  const totalAngle=ringAngle[r]+(r===drag?ringDrag:0);
+  let best=-1,bestD=1e9;
+  for(let s=0;s<N;s++){
+    let a=((totalAngle+(s+0.5)*STEP)%(2*Math.PI)+2*Math.PI)%(2*Math.PI);
+    const d=Math.min(a,2*Math.PI-a);
+    if(d<bestD){bestD=d;best=s;}
+  }
+  return best;
+}
+
+function doEinrasten(){
+  if(isSolved) return;
+  // Limit to 7 total pending+solved
+  if(pendingEntries.length+solvedEntries.length>=N) return;
+
+  const gSlot=topSlot(0);
+  const dSlot=topSlot(1);
+  const mSlot=topSlot(2);
+
+  // Check if any of these slots are already used in pending or solved
+  const allEntries=[...pendingEntries,...solvedEntries];
+  const gUsed=allEntries.some(e=>e.gSlot===gSlot);
+  const dUsed=allEntries.some(e=>e.dSlot===dSlot);
+  const mUsed=allEntries.some(e=>e.mSlot===mSlot);
+  if(gUsed||dUsed||mUsed) return; // slot already occupied
+
+  const god=gOrd[gSlot];
+  const day=dOrd[dSlot];
+  const mon=mOrd[mSlot];
+
+  pendingEntries.push({gSlot,dSlot,mSlot,god,day,mon});
+  updProg();draw();
+}
+
+function doLoesen(){
+  if(isSolved||pendingEntries.length===0) return;
+
+  // Check each pending: all three slots must show the same god index
+  const allCorrect=pendingEntries.every(e=>e.god===e.day && e.day===e.mon);
+
+  if(allCorrect){
+    solvedEntries.push(...pendingEntries);
+    pendingEntries=[];
+    updProg();
+    if(solvedEntries.length>=N){
+      isSolved=true;
+      document.getElementById('solved').classList.add('visible');
+      // Spielbuttons verstecken, Beenden-Button zeigen
+      document.getElementById('btn-einrasten').style.display='none';
+      document.getElementById('btn-loesen').style.display='none';
+      document.getElementById('btn-reset-pending').style.display='none';
+      document.getElementById('btn-beenden').style.display='inline-block';
+    }
+    draw();
+  } else {
+    playThunder();
+    const warn=document.getElementById('warn');
+    warn.classList.add('visible');
+    // Buttons während Warnung deaktivieren
+    document.getElementById('btn-einrasten').disabled=true;
+    document.getElementById('btn-loesen').disabled=true;
+    document.getElementById('btn-reset-pending').disabled=true;
+    setTimeout(()=>{
+      warn.classList.remove('visible');
+      doFullReset();
+    },7000);
+  }
+}
+
+// ── Canvas drawing ──
+const CV=document.getElementById('cv');
+const ctx=CV.getContext('2d');
+const W=480,H=480,CX=240,CY=240;
+const RO=212,RM=156,RI=100,RH=44;
+
+function arcSeg(r1,r2,aMid,fill,stroke,lw){
+  const a1=aMid-STEP/2,a2=aMid+STEP/2;
+  ctx.beginPath();ctx.arc(CX,CY,r1,a1,a2);ctx.arc(CX,CY,r2,a2,a1,true);ctx.closePath();
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw||0.5;ctx.stroke();}
+}
+function fullRing(r1,r2,fill,stroke){
+  ctx.beginPath();ctx.arc(CX,CY,r1,0,2*Math.PI);ctx.arc(CX,CY,r2,0,2*Math.PI,true);
+  ctx.fillStyle=fill;ctx.fill();
+  ctx.beginPath();ctx.arc(CX,CY,r1,0,2*Math.PI);ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();
+  ctx.beginPath();ctx.arc(CX,CY,r2,0,2*Math.PI);ctx.stroke();
+}
+function dividers(r1,r2,rIdx){
+  const totalA=ringAngle[rIdx]+(rIdx===drag?ringDrag:0);
+  ctx.strokeStyle=SC.brd;ctx.lineWidth=0.5;
+  for(let s=0;s<N;s++){
+    const a=-Math.PI/2+totalA+s*STEP;
+    ctx.beginPath();ctx.moveTo(CX+(r2)*Math.cos(a),CY+(r2)*Math.sin(a));ctx.lineTo(CX+r1*Math.cos(a),CY+r1*Math.sin(a));ctx.stroke();
+  }
+}
+
+function drawGodAt(x,y,godIdx){
+  ctx.font='20px serif';ctx.fillStyle=SC.txt;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(GODS[godIdx],x,y);
+}
+function drawDayAt(x,y,dayIdx){
+  const t=dayIdx;
+  ctx.save();ctx.translate(x,y);
+  ctx.strokeStyle=SC.txt;ctx.fillStyle=SC.txt;
+  ctx.lineWidth=1.4;ctx.lineCap='round';ctx.lineJoin='round';
+  const k=12;
+  switch(t){
+    case 0:ctx.beginPath();ctx.arc(0,0,3.5,0,2*Math.PI);ctx.stroke();for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.beginPath();ctx.moveTo(Math.cos(a)*4.5,Math.sin(a)*4.5);ctx.lineTo(Math.cos(a)*k,Math.sin(a)*k);ctx.stroke();}break;
+    case 1:ctx.beginPath();ctx.moveTo(-k,0);ctx.quadraticCurveTo(0,-k/1.2,k,0);ctx.quadraticCurveTo(0,k/1.2,-k,0);ctx.stroke();ctx.beginPath();ctx.arc(0,0,3,0,2*Math.PI);ctx.stroke();ctx.beginPath();ctx.arc(0,0,1,0,2*Math.PI);ctx.fill();break;
+    case 2:{const ks=15;ctx.beginPath();ctx.moveTo(0,ks);ctx.lineTo(0,-3);ctx.stroke();ctx.beginPath();ctx.moveTo(-3.5,2);ctx.lineTo(0,-ks);ctx.lineTo(3.5,2);ctx.closePath();ctx.fill();break;}
+    case 3:{
+      // Mercurius — Vogelfeder, skaliert auf k=10 Raum
+      const sc=0.525;
+      ctx.save();ctx.scale(sc,sc);
+      // Federform
+      ctx.beginPath();
+      ctx.moveTo(0,-24);
+      ctx.bezierCurveTo(8,-18,10,0,6,16);
+      ctx.bezierCurveTo(4,20,2,22,0,26);
+      ctx.bezierCurveTo(-2,22,-4,20,-6,16);
+      ctx.bezierCurveTo(-10,0,-8,-18,0,-24);
+      ctx.closePath();ctx.fill();
+      // Kiel
+      ctx.strokeStyle='#1a1714';ctx.lineWidth=1.0/sc;
+      ctx.beginPath();ctx.moveTo(0,-24);ctx.bezierCurveTo(0,-8,0,10,0,26);ctx.stroke();
+      // Streben links
+      ctx.lineWidth=0.8/sc;
+      [[-18,-6],[-16,2],[-14,10],[-10,17],[-6,22]].forEach(([ex,ey],i)=>{
+        const sy=-16+i*9;
+        ctx.beginPath();ctx.moveTo(0,sy);ctx.lineTo(ex,ey);ctx.stroke();
+      });
+      // Streben rechts
+      [[18,-6],[16,2],[14,10],[10,17],[6,22]].forEach(([ex,ey],i)=>{
+        const sy=-16+i*9;
+        ctx.beginPath();ctx.moveTo(0,sy);ctx.lineTo(ex,ey);ctx.stroke();
+      });
+      // Kiel unten
+      ctx.strokeStyle=SC.txt;ctx.lineWidth=1.8/sc;
+      ctx.beginPath();ctx.moveTo(0,26);ctx.lineTo(0,34);ctx.stroke();
+      ctx.restore();
+      break;
+    }
+    case 4:{const ks=15;ctx.beginPath();ctx.moveTo(3,-ks);ctx.lineTo(-3,0);ctx.lineTo(3,0);ctx.lineTo(-3,ks);ctx.fill();break;}
+    case 5:{
+      // Venus — Jakobsmuschel
+      const sc=0.48;
+      ctx.save();ctx.scale(sc,sc);ctx.translate(0,-6);
+      ctx.lineWidth=2.2/sc;
+      ctx.beginPath();ctx.moveTo(-22,10);ctx.bezierCurveTo(-24,-4,-18,-22,0,-26);ctx.bezierCurveTo(18,-22,24,-4,22,10);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(-22,10);ctx.lineTo(22,10);ctx.stroke();
+      ctx.lineWidth=1.3/sc;
+      [[-22,-2],[-20,-10],[-16,-18],[-10,-24],[-4,-27],[0,-28],[4,-27],[10,-24],[16,-18],[20,-10],[22,-2]].forEach(([rx,ry])=>{
+        ctx.beginPath();ctx.moveTo(0,10);ctx.lineTo(rx,ry);ctx.stroke();
+      });
+      ctx.lineWidth=2/sc;
+      ctx.beginPath();ctx.moveTo(-8,10);ctx.bezierCurveTo(-6,18,6,18,8,10);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(-10,20);ctx.lineTo(10,20);ctx.stroke();
+      ctx.restore();
+      break;
+    }
+    case 6:{
+      // Saturnus — exakt D3, funktioniert wie im Test
+      const sc=0.285;
+      ctx.save();
+      ctx.translate(0,0);
+      ctx.scale(sc,sc);
+      ctx.translate(-28,-38);
+      ctx.transform(1,0,0,-1,0,76);
+      const p=new Path2D('M 38 4 A 36 36 0 0 1 6 60 A 26 22 0 0 0 38 4 Z');
+      ctx.fill(p);
+      ctx.lineWidth=3.5/sc;
+      ctx.beginPath();ctx.moveTo(38,4);ctx.lineTo(50,-10);ctx.stroke();
+      ctx.restore();
+      break;
+    }
+  }
+  ctx.restore();
+}
+function drawNumAt(x,y,monIdx){
+  ctx.font='bold 14px monospace';ctx.fillStyle=SC.acc;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(NUMS[monIdx],x,y);
+}
+
+function drawFenster(){
+  const hw=STEP/2+0.05,a1=-Math.PI/2-hw,a2=-Math.PI/2+hw;
+  ctx.beginPath();ctx.arc(CX,CY,RO+16,a1,a2);ctx.arc(CX,CY,RH-16,a2,a1,true);ctx.closePath();
+  ctx.fillStyle='rgba(201,168,76,0.07)';ctx.fill();
+  ctx.strokeStyle=SC.mkr;ctx.lineWidth=2;ctx.stroke();
+  for(const a of[a1,a2]){
+    ctx.beginPath();ctx.moveTo(CX+(RH-16)*Math.cos(a),CY+(RH-16)*Math.sin(a));ctx.lineTo(CX+(RO+16)*Math.cos(a),CY+(RO+16)*Math.sin(a));ctx.strokeStyle=SC.mkr;ctx.lineWidth=1.5;ctx.stroke();
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle=SC.bg;ctx.beginPath();ctx.arc(CX,CY,RO+22,0,2*Math.PI);ctx.fill();
+
+  fullRing(RO,RM+2,SC.r1,SC.brd);
+  fullRing(RM,RI+2,SC.r2,SC.brd);
+  fullRing(RI,RH,SC.r3,SC.brd);
+
+  // Active slot highlight
+  const gs=topSlot(0),ds=topSlot(1),ms=topSlot(2);
+  arcSeg(RO,RM+2,slotWorldAngle(0,gs),SC.act,SC.actB,1.2);
+  arcSeg(RM,RI+2,slotWorldAngle(1,ds),SC.act,SC.actB,1.2);
+  arcSeg(RI,RH,  slotWorldAngle(2,ms),SC.act,SC.actB,1.2);
+
+  dividers(RO,RM+2,0);
+  dividers(RM,RI+2,1);
+  dividers(RI,RH,2);
+
+  const rG=(RO+RM)/2+4,rD=(RM+RI)/2+2,rM=(RI+RH)/2;
+
+  // Draw all moving symbols
+  for(let s=0;s<N;s++){
+    const ag=slotWorldAngle(0,s);
+    const ad=slotWorldAngle(1,s);
+    const am=slotWorldAngle(2,s);
+    drawGodAt(CX+rG*Math.cos(ag),CY+rG*Math.sin(ag),gOrd[s]);
+    drawDayAt(CX+rD*Math.cos(ad),CY+rD*Math.sin(ad),dOrd[s]);
+    drawNumAt(CX+rM*Math.cos(am),CY+rM*Math.sin(am),mOrd[s]);
+  }
+
+  // Pending entries — gold overlay, positions computed from CURRENT ring angles
+  for(const e of pendingEntries){
+    const a0=slotWorldAngle(0,e.gSlot);
+    const a1=slotWorldAngle(1,e.dSlot);
+    const a2=slotWorldAngle(2,e.mSlot);
+    arcSeg(RO,RM+2,a0,SC.pending,SC.pendingB,2);
+    arcSeg(RM,RI+2,a1,SC.pending,SC.pendingB,1.5);
+    arcSeg(RI,RH,  a2,SC.pending,SC.pendingB,1.5);
+    drawGodAt(CX+rG*Math.cos(a0),CY+rG*Math.sin(a0),e.god);
+    drawDayAt(CX+rD*Math.cos(a1),CY+rD*Math.sin(a1),e.day);
+    drawNumAt(CX+rM*Math.cos(a2),CY+rM*Math.sin(a2),e.mon);
+  }
+
+  // Solved entries — green overlay
+  for(const e of solvedEntries){
+    const a0=slotWorldAngle(0,e.gSlot);
+    const a1=slotWorldAngle(1,e.dSlot);
+    const a2=slotWorldAngle(2,e.mSlot);
+    arcSeg(RO,RM+2,a0,SC.solved,SC.solvedB,2);
+    arcSeg(RM,RI+2,a1,SC.solved,SC.solvedB,1.5);
+    arcSeg(RI,RH,  a2,SC.solved,SC.solvedB,1.5);
+    drawGodAt(CX+rG*Math.cos(a0),CY+rG*Math.sin(a0),e.god);
+    drawDayAt(CX+rD*Math.cos(a1),CY+rD*Math.sin(a1),e.day);
+    drawNumAt(CX+rM*Math.cos(a2),CY+rM*Math.sin(a2),e.mon);
+  }
+
+  // Hub
+  ctx.beginPath();ctx.arc(CX,CY,RH,0,2*Math.PI);
+  ctx.fillStyle=SC.bg;ctx.fill();ctx.strokeStyle=SC.brd;ctx.lineWidth=1;ctx.stroke();
+  ctx.font='italic 10px Georgia';ctx.fillStyle=SC.mut;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('PORTA',CX,CY-7);ctx.fillText('RITUUM',CX,CY+7);
+
+  drawFenster();
+  ctx.beginPath();ctx.arc(CX,CY,RO+2,0,2*Math.PI);ctx.strokeStyle=SC.brd;ctx.lineWidth=2;ctx.stroke();
+}
+
+// ── Input handling ──
+function getPos(e){
+  const r=CV.getBoundingClientRect(),sx=W/r.width,sy=H/r.height;
+  let cx,cy;
+  if(e.touches){cx=(e.touches[0].clientX-r.left)*sx;cy=(e.touches[0].clientY-r.top)*sy;}
+  else{cx=(e.clientX-r.left)*sx;cy=(e.clientY-r.top)*sy;}
+  return{dist:Math.sqrt((cx-CX)**2+(cy-CY)**2),angle:Math.atan2(cy-CY,cx-CX)};
+}
+function getRingIdx(dist){
+  if(dist>RM+2&&dist<=RO)return 0;
+  if(dist>RI+2&&dist<=RM)return 1;
+  if(dist>RH&&dist<=RI)return 2;
+  return -1;
+}
+function snapRing(rIdx){
+  // Snap so a slot CENTER lands exactly at top (-PI/2)
+  // Valid offsets: -0.5*STEP + k*STEP for integer k
+  const k=Math.round((ringAngle[rIdx]+0.5*STEP)/STEP);
+  ringAngle[rIdx]=-0.5*STEP+k*STEP;
+  ringDrag=0;
+}
+
+CV.addEventListener('mousedown',e=>{
+  if(isSolved)return;
+  const{dist,angle}=getPos(e);
+  const r=getRingIdx(dist);if(r<0)return;
+  drag=r;dragStartAngle=angle;dragStartRingAngle=ringAngle[r];ringDrag=0;
+});
+CV.addEventListener('touchstart',e=>{
+  if(isSolved)return;
+  const{dist,angle}=getPos(e);
+  const r=getRingIdx(dist);if(r<0)return;
+  drag=r;dragStartAngle=angle;dragStartRingAngle=ringAngle[r];ringDrag=0;
+},{passive:true});
+CV.addEventListener('mousemove',e=>{
+  if(drag===null)return;
+  const{angle}=getPos(e);
+  let d=angle-dragStartAngle;
+  if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;
+  ringDrag=d;draw();
+});
+CV.addEventListener('touchmove',e=>{
+  if(drag===null)return;
+  const{angle}=getPos(e);
+  let d=angle-dragStartAngle;
+  if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;
+  ringDrag=d;draw();
+},{passive:true});
+CV.addEventListener('mouseup',()=>{
+  if(drag!==null){
+    ringAngle[drag]+=ringDrag;
+    snapRing(drag);
+    draw();
+  }
+  drag=null;ringDrag=0;
+});
+CV.addEventListener('touchend',()=>{
+  if(drag!==null){
+    ringAngle[drag]+=ringDrag;
+    snapRing(drag);
+    draw();
+  }
+  drag=null;ringDrag=0;
+});
+
+doFullReset();
+</script>
+</body>
+</html>
